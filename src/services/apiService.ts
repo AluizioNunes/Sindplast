@@ -252,4 +252,53 @@ export const apiService = {
       throw error;
     }
   },
+
+  getEmpresaById: async (id: number): Promise<Empresa> => {
+    try {
+      const response = await api.get(`/empresas/${id}`);
+      return response.data as Empresa;
+    } catch (error: any) {
+      const errorMessage = handleApiError(error, 'Falha ao carregar os dados da empresa');
+      toast.error(errorMessage);
+      throw error;
+    }
+  },
+
+  createEmpresa: async (data: Partial<Empresa>) => {
+    try {
+      const payload = { ...data };
+      const response = await api.post('/empresas', payload);
+      toast.success('Empresa cadastrada com sucesso!');
+      return response.data;
+    } catch (error: any) {
+      const errorMessage = handleApiError(error, 'Falha ao cadastrar a empresa');
+      toast.error(errorMessage);
+      throw error;
+    }
+  },
+
+  updateEmpresa: async (id: number, data: Partial<Empresa>) => {
+    try {
+      const payload = { ...data };
+      const response = await api.put(`/empresas/${id}`, payload);
+      toast.success('Empresa atualizada com sucesso!');
+      return response.data;
+    } catch (error: any) {
+      const errorMessage = handleApiError(error, 'Falha ao atualizar a empresa');
+      toast.error(errorMessage);
+      throw error;
+    }
+  },
+
+  deleteEmpresa: async (id: number) => {
+    try {
+      const response = await api.delete(`/empresas/${id}`);
+      toast.success('Empresa excluída com sucesso!');
+      return response.data;
+    } catch (error: any) {
+      const errorMessage = handleApiError(error, 'Falha ao excluir a empresa');
+      toast.error(errorMessage);
+      throw error;
+    }
+  },
 }; 

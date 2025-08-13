@@ -5,11 +5,15 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Empresa } from '../types/empresaTypes';
 import { apiService } from '../services/apiService';
+import EmpresaModal, { EmpresaForm } from '../components/EmpresaModal';
 
 const Empresas: React.FC = () => {
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [searchText, setSearchText] = useState<string>('');
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [saving, setSaving] = useState<boolean>(false);
+  const [editingEmpresa, setEditingEmpresa] = useState<Empresa | null>(null);
 
   useEffect(() => {
     fetchEmpresas();
@@ -33,6 +37,30 @@ const Empresas: React.FC = () => {
     empresa.cnpj?.toLowerCase().includes(searchText.toLowerCase()) ||
     empresa.cidade?.toLowerCase().includes(searchText.toLowerCase())
   );
+
+  const handleOpenCreate = () => {
+    setEditingEmpresa(null);
+    setModalVisible(true);
+  };
+
+  const handleSubmit = async (values: EmpresaForm) => {
+    try {
+      setSaving(true);
+      if (editingEmpresa) {
+        await apiService.updateEmpresa(editingEmpresa.id, values as any);
+        toast.success('Empresa atualizada com sucesso!');
+      } else {
+        await apiService.createEmpresa(values as any);
+        toast.success('Empresa criada com sucesso!');
+      }
+      setModalVisible(false);
+      await fetchEmpresas();
+    } catch (error) {
+      // toast já tratado no apiService
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const columns = [
     {
@@ -67,7 +95,10 @@ const Empresas: React.FC = () => {
       render: (_: any, record: Empresa) => (
         <Space size="middle">
           <Tooltip title="Editar">
-            <EditOutlined style={{ cursor: 'pointer', color: '#1677ff', fontSize: '16px' }} />
+            <EditOutlined 
+              style={{ cursor: 'pointer', color: '#1677ff', fontSize: '16px' }}
+              onClick={() => { setEditingEmpresa(record); setModalVisible(true); }}
+            />
           </Tooltip>
           <Tooltip title="Excluir">
             <DeleteOutlined style={{ cursor: 'pointer', color: '#ff4d4f', fontSize: '16px' }} />
@@ -90,7 +121,7 @@ const Empresas: React.FC = () => {
             style={{ width: 300 }}
           />
         </div>
-        <Button type="primary" icon={<PlusOutlined />}>Nova Empresa</Button>
+        <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenCreate}>Nova Empresa</Button>
       </div>
       <Table
         columns={columns}
@@ -100,6 +131,15 @@ const Empresas: React.FC = () => {
         locale={{ emptyText: 'No data' }}
       />
       <div style={{ marginTop: 16 }}>Total de {filteredEmpresas.length} empresas</div>
+
+      <EmpresaModal
+        visible={modalVisible}
+        onCancel={() => setModalVisible(false)}
+        onSubmit={handleSubmit}
+        loading={saving}
+        isEdit={!!editingEmpresa}
+        initialValues={editingEmpresa || undefined}
+      />
     </div>
   );
 };
