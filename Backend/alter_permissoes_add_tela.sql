@@ -1,0 +1,2 @@
+ALTER TABLE "Sindplast"."Permissoes"
+ADD COLUMN IF NOT EXISTS "Tela" VARCHAR(100); 
