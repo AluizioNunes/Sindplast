@@ -83,7 +83,6 @@ jspm_packages/
 
 # Gatsby files
 .cache/
-public
 
 # Storybook build outputs
 .out
@@ -99,6 +98,7 @@ __pycache__/
 *$py.class
 *.so
 .Python
+.venv/
 env/
 venv/
 ENV/
@@ -112,4 +112,4 @@ venv.bak/
 
 # Backup files
 *.bak
-*.backup 
+*.backup
