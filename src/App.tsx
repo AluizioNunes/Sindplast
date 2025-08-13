@@ -12,6 +12,7 @@ import Socios from './pages/Socios';
 import Empresas from './pages/Empresas';
 import RelatoriosEmpresas from './pages/RelatoriosEmpresas';
 import RelatoriosSocios from './pages/RelatoriosSocios';
+import Funcionarios from './pages/Funcionarios';
 import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom';
 
 const { Content, Footer } = Layout;
@@ -53,6 +54,7 @@ const AppLayout: React.FC<{ isAuthenticated: boolean; setIsAuthenticated: (v: bo
               <Route path="/permissoes" element={<Permissoes />} />
               <Route path="/socios" element={<Socios />} />
               <Route path="/empresas" element={<Empresas />} />
+              <Route path="/funcionarios" element={<Funcionarios />} />
               <Route path="/relatorios-empresas" element={<RelatoriosEmpresas />} />
               <Route path="/relatorios-socios" element={<RelatoriosSocios />} />
             </Routes>
