@@ -112,10 +112,10 @@ const Home: React.FC = () => {
       style={{ willChange: 'transform' }}
     >
       <motion.div variants={animations.fadeIn}>
-        <Title level={2}>DASHBOARD</Title>
-        <Paragraph>
-          Bem-vindo ao sistema de gestão SINDPLAST-AM
-        </Paragraph>
+      <Title level={2}>DASHBOARD</Title>
+      <Paragraph>
+        Bem-vindo ao sistema de gestão SINDPLAST-AM
+      </Paragraph>
         <Paragraph type="secondary" style={{ fontSize: '12px' }}>
           Última atualização: {dateFormats.full(lastUpdate)}
           {' '}({relativeTime.fromNow(lastUpdate)})
@@ -130,15 +130,15 @@ const Home: React.FC = () => {
               onClick={handleNavigateToEmpresas}
               style={{ cursor: 'pointer' }}
             >
-              <Statistic 
-                title="EMPRESAS" 
+            <Statistic 
+              title="EMPRESAS" 
                 value={totalEmpresas} 
-                prefix={<BankOutlined />} 
-                valueStyle={{ color: '#F2311F' }}
+              prefix={<BankOutlined />} 
+              valueStyle={{ color: '#F2311F' }}
                 loading={loadingEmpresas}
                 formatter={(value) => formatNumber(value as number)}
-              />
-            </Card>
+            />
+          </Card>
           </motion.div>
         </Col>
         <Col xs={24} sm={12} md={6}>
@@ -148,15 +148,15 @@ const Home: React.FC = () => {
               onClick={handleNavigateToSocios}
               style={{ cursor: 'pointer' }}
             >
-              <Statistic 
-                title="SÓCIOS" 
-                value={totalSocios} 
-                prefix={<UserOutlined />} 
-                valueStyle={{ color: '#F2311F' }}
-                loading={loadingSocios}
+            <Statistic 
+              title="SÓCIOS" 
+              value={totalSocios} 
+              prefix={<UserOutlined />} 
+              valueStyle={{ color: '#F2311F' }}
+              loading={loadingSocios}
                 formatter={(value) => formatNumber(value as number)}
-              />
-            </Card>
+            />
+          </Card>
           </motion.div>
         </Col>
         <Col xs={24} sm={12} md={6}>
@@ -166,14 +166,14 @@ const Home: React.FC = () => {
               onClick={handleNavigateToFuncionarios}
               style={{ cursor: 'pointer' }}
             >
-              <Statistic 
-                title="FUNCIONÁRIOS" 
-                value={384} 
-                prefix={<TeamOutlined />} 
-                valueStyle={{ color: '#F2311F' }}
+            <Statistic 
+              title="FUNCIONÁRIOS" 
+              value={384} 
+              prefix={<TeamOutlined />} 
+              valueStyle={{ color: '#F2311F' }}
                 formatter={(value) => formatNumber(value as number)}
-              />
-            </Card>
+            />
+          </Card>
           </motion.div>
         </Col>
         <Col xs={24} sm={12} md={6}>
@@ -183,64 +183,64 @@ const Home: React.FC = () => {
               onClick={handleNavigateToUsuarios}
               style={{ cursor: 'pointer' }}
             >
-              <Statistic 
-                title="USUÁRIOS" 
-                value={totalUsuarios} 
-                prefix={<UserOutlined />} 
-                valueStyle={{ color: '#F2311F' }}
-                loading={loadingUsuarios}
+            <Statistic 
+              title="USUÁRIOS" 
+              value={totalUsuarios} 
+              prefix={<UserOutlined />} 
+              valueStyle={{ color: '#F2311F' }}
+              loading={loadingUsuarios}
                 formatter={(value) => formatNumber(value as number)}
-              />
-            </Card>
+            />
+          </Card>
           </motion.div>
         </Col>
       </Row>
       
       <motion.div variants={animations.fadeIn}>
-        <Title level={4}>AÇÕES RÁPIDAS</Title>
+      <Title level={4}>AÇÕES RÁPIDAS</Title>
       </motion.div>
       
       <Row gutter={[16, 16]} style={{ marginTop: '20px' }}>
         <Col span={8}>
           <motion.div variants={animations.card}>
-            <Card title="CADASTRO DE EMPRESAS" bordered={true}>
-              <p>Adicione ou edite informações de empresas no sistema</p>
+          <Card title="CADASTRO DE EMPRESAS" bordered={true}>
+            <p>Adicione ou edite informações de empresas no sistema</p>
               <motion.div
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 transition={{ duration: 0.15 }}
               >
-                <Button type="primary">ACESSAR</Button>
+            <Button type="primary">ACESSAR</Button>
               </motion.div>
-            </Card>
+          </Card>
           </motion.div>
         </Col>
         <Col span={8}>
           <motion.div variants={animations.card}>
-            <Card title="RELATÓRIOS" bordered={true}>
-              <p>Acesse relatórios e dados estatísticos das empresas</p>
+          <Card title="RELATÓRIOS" bordered={true}>
+            <p>Acesse relatórios e dados estatísticos das empresas</p>
               <motion.div
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 transition={{ duration: 0.15 }}
               >
-                <Button type="primary">VISUALIZAR</Button>
+            <Button type="primary">VISUALIZAR</Button>
               </motion.div>
-            </Card>
+          </Card>
           </motion.div>
         </Col>
         <Col span={8}>
           <motion.div variants={animations.card}>
-            <Card title="CONFIGURAÇÕES" bordered={true}>
-              <p>Configure parâmetros do sistema e permissões</p>
+          <Card title="CONFIGURAÇÕES" bordered={true}>
+            <p>Configure parâmetros do sistema e permissões</p>
               <motion.div
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 transition={{ duration: 0.15 }}
               >
-                <Button type="primary">CONFIGURAR</Button>
+            <Button type="primary">CONFIGURAR</Button>
               </motion.div>
-            </Card>
+          </Card>
           </motion.div>
         </Col>
       </Row>

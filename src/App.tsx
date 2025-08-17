@@ -1,19 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { Layout } from 'antd';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
+import { Layout, Spin } from 'antd';
 import './App.css';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
-import Home from './pages/Home';
-import Usuarios from './pages/Usuarios';
 import Login from './components/Login';
-import Perfil from './pages/Perfil';
-import Permissoes from './pages/Permissoes';
-import Socios from './pages/Socios';
-import Empresas from './pages/Empresas';
-import RelatoriosEmpresas from './pages/RelatoriosEmpresas';
-import RelatoriosSocios from './pages/RelatoriosSocios';
-import Funcionarios from './pages/Funcionarios';
 import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom';
+
+// Lazy loading das páginas
+const Home = lazy(() => import('./pages/Home'));
+const Usuarios = lazy(() => import('./pages/Usuarios'));
+const Perfil = lazy(() => import('./pages/Perfil'));
+const Permissoes = lazy(() => import('./pages/Permissoes'));
+const Socios = lazy(() => import('./pages/Socios'));
+const Empresas = lazy(() => import('./pages/Empresas'));
+const RelatoriosEmpresas = lazy(() => import('./pages/RelatoriosEmpresas'));
+const RelatoriosSocios = lazy(() => import('./pages/RelatoriosSocios'));
+const Funcionarios = lazy(() => import('./pages/Funcionarios'));
 
 const { Content, Footer } = Layout;
 
@@ -47,17 +49,31 @@ const AppLayout: React.FC<{ isAuthenticated: boolean; setIsAuthenticated: (v: bo
         <Sidebar collapsed={collapsed} />
         <Layout>
           <Content style={{ margin: '24px 16px', padding: 24, minHeight: 280 }}>
-            <Routes>
-              <Route path="/home" element={<Home />} />
-              <Route path="/usuarios" element={<Usuarios />} />
-              <Route path="/perfil" element={<Perfil />} />
-              <Route path="/permissoes" element={<Permissoes />} />
-              <Route path="/socios" element={<Socios />} />
-              <Route path="/empresas" element={<Empresas />} />
-              <Route path="/funcionarios" element={<Funcionarios />} />
-              <Route path="/relatorios-empresas" element={<RelatoriosEmpresas />} />
-              <Route path="/relatorios-socios" element={<RelatoriosSocios />} />
-            </Routes>
+            <Suspense fallback={
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                height: '200px',
+                flexDirection: 'column',
+                gap: '16px'
+              }}>
+                <Spin size="large" />
+                <div style={{ color: '#666', fontSize: '14px' }}>Carregando página...</div>
+              </div>
+            }>
+              <Routes>
+                <Route path="/home" element={<Home />} />
+                <Route path="/usuarios" element={<Usuarios />} />
+                <Route path="/perfil" element={<Perfil />} />
+                <Route path="/permissoes" element={<Permissoes />} />
+                <Route path="/socios" element={<Socios />} />
+                <Route path="/empresas" element={<Empresas />} />
+                <Route path="/funcionarios" element={<Funcionarios />} />
+                <Route path="/relatorios-empresas" element={<RelatoriosEmpresas />} />
+                <Route path="/relatorios-socios" element={<RelatoriosSocios />} />
+              </Routes>
+            </Suspense>
           </Content>
           <Footer style={{ textAlign: 'center' }}>
             SINDPLAST-AM ©{new Date().getFullYear()} - Todos os direitos reservados

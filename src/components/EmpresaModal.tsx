@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
-import { Modal, Form, Input, Row, Col, Button, Select, DatePicker, InputNumber } from 'antd';
-import { SaveOutlined, CloseCircleFilled } from '@ant-design/icons';
+import React, { useEffect, useState } from 'react';
+import { Modal, Form, Input, Row, Col, Button, Select, DatePicker, InputNumber, Steps } from 'antd';
+import { SaveOutlined, CloseCircleFilled, ArrowLeftOutlined, ArrowRightOutlined } from '@ant-design/icons';
 import moment, { Moment } from 'moment';
+import { useNavigate } from 'react-router-dom';
 import { Empresa } from '../types/empresaTypes';
 
 export interface EmpresaForm {
@@ -61,10 +62,32 @@ const formatCEP = (value: string) => {
 
 const EmpresaModal: React.FC<EmpresaModalProps> = ({ visible, onCancel, onSubmit, initialValues, loading, isEdit }) => {
   const [form] = Form.useForm();
+  const navigate = useNavigate();
+  const [currentStep, setCurrentStep] = useState(0);
+
+  const steps = [
+    {
+      title: 'Dados da Empresa',
+      description: 'Informações básicas',
+    },
+    {
+      title: 'Endereço',
+      description: 'Localização',
+    },
+    {
+      title: 'Contatos e Redes',
+      description: 'Comunicação',
+    },
+    {
+      title: 'Contribuição',
+      description: 'Financeiro',
+    },
+  ];
 
   useEffect(() => {
     if (visible) {
       form.resetFields();
+      setCurrentStep(0);
       if (initialValues) {
         const values: any = { ...initialValues };
         if (values.dataContribuicao) values.dataContribuicao = moment(values.dataContribuicao);
@@ -108,44 +131,27 @@ const EmpresaModal: React.FC<EmpresaModalProps> = ({ visible, onCancel, onSubmit
     onSubmit(processed);
   };
 
-  return (
-    <Modal
-      open={visible}
-      title={null}
-      onCancel={onCancel}
-      footer={null}
-      closable={false}
-      centered
-      width={1100}
-      style={{ borderRadius: 0, padding: 0 }}
-      bodyStyle={{ padding: 0, backgroundColor: '#f5f7e9', border: 'none' }}
-      modalRender={(node) => node}
-      wrapClassName="empresa-modal-wrapper"
-      destroyOnClose
-    >
-      <div style={{ padding: 0 }}>
-        <div style={{ 
-          backgroundColor: '#F2311F', 
-          color: 'white', 
-          padding: '10px 20px',
-          textAlign: 'left',
-          height: '60px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center'
-        }}>
-          <div style={{ fontSize: '22px', fontWeight: 'bold', lineHeight: '1.2' }}>SINDPLAST-AM</div>
-          <div style={{ fontSize: '11px', lineHeight: '1.2' }}>
-            SINDICATO DOS TRABALHADORES NAS INDÚSTRIAS DE MATERIAL PLÁSTICO DE MANAUS E DO ESTADO DO AMAZONAS
-          </div>
-        </div>
+  const next = async () => {
+    try {
+      const values = await form.validateFields();
+      setCurrentStep(currentStep + 1);
+    } catch (error) {
+      console.log('Validation failed:', error);
+    }
+  };
 
-        <div style={{ padding: '20px 30px' }}>
-          <Form form={form} layout="vertical" onFinish={handleSubmit} autoComplete="off">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-              <h4 style={{ borderBottom: '1px solid #ccc', paddingBottom: '8px', margin: 0, flex: 1 }}>Dados da Empresa</h4>
-            </div>
+  const prev = () => {
+    setCurrentStep(currentStep - 1);
+  };
 
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 0:
+        return (
+          <div>
+            <h4 style={{ borderBottom: '1px solid #ccc', paddingBottom: '8px', marginBottom: '20px' }}>
+              Dados da Empresa
+            </h4>
             <Row gutter={16}>
               <Col span={5}>
                 <Form.Item name="codEmpresa" label="Código">
@@ -173,26 +179,34 @@ const EmpresaModal: React.FC<EmpresaModalProps> = ({ visible, onCancel, onSubmit
                 </Form.Item>
               </Col>
             </Row>
-
             <Row gutter={16}>
-              <Col span={8}>
+              <Col span={12}>
                 <Form.Item name="nomeFantasia" label="Nome Fantasia">
                   <Input placeholder="NOME FANTASIA" style={{ textTransform: 'uppercase' }} />
                 </Form.Item>
               </Col>
-              <Col span={8}>
+              <Col span={12}>
                 <Form.Item name="telefone01" label="Telefone 1">
                   <Input placeholder="(00) 0000-0000" />
                 </Form.Item>
               </Col>
-              <Col span={8}>
+            </Row>
+            <Row gutter={16}>
+              <Col span={12}>
                 <Form.Item name="telefone02" label="Telefone 2">
                   <Input placeholder="(00) 0000-0000" />
                 </Form.Item>
               </Col>
             </Row>
+          </div>
+        );
 
-            <h4 style={{ borderBottom: '1px solid #ccc', paddingBottom: '8px', marginTop: '20px' }}>Endereço</h4>
+      case 1:
+        return (
+          <div>
+            <h4 style={{ borderBottom: '1px solid #ccc', paddingBottom: '8px', marginBottom: '20px' }}>
+              Endereço
+            </h4>
             <Row gutter={16}>
               <Col span={10}>
                 <Form.Item name="endereco" label="Endereço">
@@ -210,7 +224,6 @@ const EmpresaModal: React.FC<EmpresaModalProps> = ({ visible, onCancel, onSubmit
                 </Form.Item>
               </Col>
             </Row>
-
             <Row gutter={16}>
               <Col span={6}>
                 <Form.Item name="bairro" label="Bairro">
@@ -247,44 +260,60 @@ const EmpresaModal: React.FC<EmpresaModalProps> = ({ visible, onCancel, onSubmit
                 </Form.Item>
               </Col>
             </Row>
+          </div>
+        );
 
-            <h4 style={{ borderBottom: '1px solid #ccc', paddingBottom: '8px', marginTop: '20px' }}>Contatos e Redes</h4>
+      case 2:
+        return (
+          <div>
+            <h4 style={{ borderBottom: '1px solid #ccc', paddingBottom: '8px', marginBottom: '20px' }}>
+              Contatos e Redes Sociais
+            </h4>
             <Row gutter={16}>
-              <Col span={6}>
+              <Col span={8}>
                 <Form.Item name="fax" label="Fax">
                   <Input placeholder="FAX" />
                 </Form.Item>
               </Col>
-              <Col span={6}>
+              <Col span={8}>
                 <Form.Item name="celular" label="Celular">
                   <Input placeholder="(00) 00000-0000" />
                 </Form.Item>
               </Col>
-              <Col span={6}>
+              <Col span={8}>
                 <Form.Item name="whatsapp" label="Whatsapp">
                   <Input placeholder="(00) 00000-0000" />
                 </Form.Item>
               </Col>
-              <Col span={6}>
+            </Row>
+            <Row gutter={16}>
+              <Col span={12}>
                 <Form.Item name="instagram" label="Instagram">
                   <Input placeholder="@perfil" />
                 </Form.Item>
               </Col>
-            </Row>
-            <Row gutter={16}>
               <Col span={12}>
                 <Form.Item name="linkedin" label="LinkedIn">
                   <Input placeholder="URL ou @perfil" />
                 </Form.Item>
               </Col>
-              <Col span={12}>
+            </Row>
+            <Row gutter={16}>
+              <Col span={24}>
                 <Form.Item name="observacao" label="Observação">
-                  <Input.TextArea rows={2} placeholder="Observações gerais" />
+                  <Input.TextArea rows={3} placeholder="Observações gerais" />
                 </Form.Item>
               </Col>
             </Row>
+          </div>
+        );
 
-            <h4 style={{ borderBottom: '1px solid #ccc', paddingBottom: '8px', marginTop: '20px' }}>Contribuição</h4>
+      case 3:
+        return (
+          <div>
+            <h4 style={{ borderBottom: '1px solid #ccc', paddingBottom: '8px', marginBottom: '20px' }}>
+              Contribuição
+            </h4>
             <Row gutter={16}>
               <Col span={8}>
                 <Form.Item name="nFuncionarios" label="Nº Funcionários">
@@ -299,69 +328,167 @@ const EmpresaModal: React.FC<EmpresaModalProps> = ({ visible, onCancel, onSubmit
               <Col span={8}>
                 <Form.Item name="valorContribuicao" label="Valor Contribuição">
                   <InputNumber 
-                  style={{ width: '100%' }} 
-                  min={0} 
-                  step={0.01} 
-                  formatter={(value) => `R$ ${value ?? ''}`} 
-                  parser={(value) => (value ? value.replace(/R\$\s?/g, '') : '') as any} 
-                />
+                    style={{ width: '100%' }} 
+                    min={0} 
+                    step={0.01} 
+                    formatter={(value) => `R$ ${value ?? ''}`} 
+                    parser={(value) => (value ? value.replace(/R\$\s?/g, '') : '') as any} 
+                  />
                 </Form.Item>
               </Col>
             </Row>
-
             <Row gutter={16}>
-              <Col span={8}>
+              <Col span={12}>
                 <Form.Item name="dataCadastro" label="Data Cadastro">
                   <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" />
                 </Form.Item>
               </Col>
-              <Col span={8}>
+              <Col span={12}>
                 <Form.Item name="cadastrante" label="Cadastrante">
                   <Input disabled />
                 </Form.Item>
               </Col>
             </Row>
+          </div>
+        );
 
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '30px', marginTop: '20px', paddingBottom: '10px' }}>
-              <Button 
-                htmlType="submit" 
-                loading={loading}
-                style={{ 
-                  width: '180px', 
-                  height: '50px',
-                  fontSize: '18px',
-                  fontWeight: 'bold',
-                  backgroundColor: '#4caf50',
-                  borderColor: '#4caf50',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                <SaveOutlined style={{ marginRight: '8px' }} /> SALVAR
-              </Button>
-              <Button
-                onClick={onCancel}
-                style={{ 
-                  width: '180px',
-                  height: '50px',
-                  fontSize: '18px',
-                  fontWeight: 'bold',
-                  backgroundColor: '#f44336',
-                  borderColor: '#f44336',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                <CloseCircleFilled style={{ marginRight: '8px' }} /> CANCELAR
-              </Button>
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <Modal
+      open={visible}
+      title={null}
+      onCancel={onCancel}
+      footer={null}
+      closable={false}
+      centered
+      width={900}
+      style={{ borderRadius: 0, padding: 0 }}
+      styles={{ body: { padding: 0, backgroundColor: '#f5f7e9', border: 'none' } }}
+      modalRender={(node) => node}
+      wrapClassName="empresa-modal-wrapper"
+      destroyOnHidden
+    >
+      <div style={{ padding: 0 }}>
+        <div style={{ 
+          backgroundColor: '#F2311F', 
+          color: 'white', 
+          padding: '10px 20px',
+          textAlign: 'left',
+          height: '60px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          cursor: 'pointer'
+        }}
+        onClick={() => navigate('/home')}
+        >
+          <div style={{ fontSize: '22px', fontWeight: 'bold', lineHeight: '1.2' }}>SINDPLAST-AM</div>
+          <div style={{ fontSize: '11px', lineHeight: '1.2' }}>
+            SINDICATO DOS TRABALHADORES NAS INDÚSTRIAS DE MATERIAL PLÁSTICO DE MANAUS E DO ESTADO DO AMAZONAS
+          </div>
+        </div>
+
+        <div style={{ padding: '20px 30px' }}>
+          <Steps current={currentStep} items={steps} style={{ marginBottom: '30px' }} />
+          
+          <Form form={form} layout="vertical" onFinish={handleSubmit} autoComplete="off">
+            {renderStepContent()}
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '30px', paddingBottom: '10px' }}>
+              <div>
+                {currentStep > 0 && (
+                  <Button 
+                    onClick={prev}
+                    icon={<ArrowLeftOutlined />}
+                    style={{ 
+                      height: '40px',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      backgroundColor: '#666',
+                      borderColor: '#666',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    ANTERIOR
+                  </Button>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px' }}>
+                {currentStep < steps.length - 1 && (
+                  <Button 
+                    onClick={next}
+                    icon={<ArrowRightOutlined />}
+                    style={{ 
+                      height: '40px',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      backgroundColor: '#1890ff',
+                      borderColor: '#1890ff',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    PRÓXIMO
+                  </Button>
+                )}
+
+                {currentStep === steps.length - 1 && (
+                  <Button 
+                    htmlType="submit" 
+                    loading={loading}
+                    icon={<SaveOutlined />}
+                    style={{ 
+                      height: '40px',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      backgroundColor: '#4caf50',
+                      borderColor: '#4caf50',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    SALVAR
+                  </Button>
+                )}
+
+                <Button
+                  onClick={onCancel}
+                  icon={<CloseCircleFilled />}
+                  style={{ 
+                    height: '40px',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    backgroundColor: '#f44336',
+                    borderColor: '#f44336',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  CANCELAR
+                </Button>
+              </div>
             </div>
           </Form>
         </div>
