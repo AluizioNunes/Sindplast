@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Form, Input, Row, Col, Button, Select, DatePicker, Switch } from 'antd';
-import { SaveOutlined, CloseCircleFilled, CheckOutlined, CloseOutlined } from '@ant-design/icons';
+import { Modal, Form, Input, Row, Col, Button, Select, DatePicker, Switch, Steps } from 'antd';
+import { SaveOutlined, CloseCircleFilled, CheckOutlined, CloseOutlined, ArrowLeftOutlined, ArrowRightOutlined } from '@ant-design/icons';
 import moment, { Moment } from 'moment';
+import { useNavigate } from 'react-router-dom';
 
 export interface SocioForm {
   nome?: string;
@@ -53,20 +54,57 @@ interface SocioModalProps {
   isEdit?: boolean;
 }
 
+const estados = [
+  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO',
+  'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI',
+  'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
+];
+
+const formatCPF = (value: string) => {
+  const cpf = value.replace(/\D/g, '');
+  if (cpf.length <= 3) return cpf;
+  if (cpf.length <= 6) return `${cpf.slice(0, 3)}.${cpf.slice(3)}`;
+  if (cpf.length <= 9) return `${cpf.slice(0, 3)}.${cpf.slice(3, 6)}.${cpf.slice(6)}`;
+  return `${cpf.slice(0, 3)}.${cpf.slice(3, 6)}.${cpf.slice(6, 9)}-${cpf.slice(9, 11)}`;
+};
+
+const formatCEP = (value: string) => {
+  const cep = value.replace(/\D/g, '');
+  if (cep.length <= 5) return cep;
+  return `${cep.slice(0, 5)}-${cep.slice(5, 8)}`;
+};
+
 const SocioModal: React.FC<SocioModalProps> = ({ visible, onCancel, onSubmit, initialValues, loading, isEdit }) => {
   const [form] = Form.useForm();
-  const [estados] = useState<string[]>([
-    'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO',
-    'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI',
-    'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
-  ]);
+  const navigate = useNavigate();
+  const [currentStep, setCurrentStep] = useState(0);
   const [statusAtivo, setStatusAtivo] = useState<boolean>(true);
+
+  const steps = [
+    {
+      title: 'Dados Pessoais',
+      description: 'Informações básicas',
+    },
+    {
+      title: 'Endereço',
+      description: 'Localização',
+    },
+    {
+      title: 'Contato',
+      description: 'Comunicação',
+    },
+    {
+      title: 'Dados Sindicais',
+      description: 'Informações profissionais',
+    },
+  ];
 
   useEffect(() => {
     if (visible) {
       form.resetFields();
+      setCurrentStep(0);
       if (initialValues) {
-        const values = { ...initialValues };
+        const values: any = { ...initialValues };
         if (values.nascimento) values.nascimento = moment(values.nascimento);
         if (values.dataMensalidade) values.dataMensalidade = moment(values.dataMensalidade);
         if (values.dataAdmissao) values.dataAdmissao = moment(values.dataAdmissao);
@@ -85,20 +123,6 @@ const SocioModal: React.FC<SocioModalProps> = ({ visible, onCancel, onSubmit, in
       }
     }
   }, [visible, initialValues, form]);
-
-  const formatCPF = (value: string) => {
-    const cpf = value.replace(/\D/g, '');
-    if (cpf.length <= 3) return cpf;
-    if (cpf.length <= 6) return `${cpf.slice(0, 3)}.${cpf.slice(3)}`;
-    if (cpf.length <= 9) return `${cpf.slice(0, 3)}.${cpf.slice(3, 6)}.${cpf.slice(6)}`;
-    return `${cpf.slice(0, 3)}.${cpf.slice(3, 6)}.${cpf.slice(6, 9)}-${cpf.slice(9, 11)}`;
-  };
-
-  const formatCEP = (value: string) => {
-    const cep = value.replace(/\D/g, '');
-    if (cep.length <= 5) return cep;
-    return `${cep.slice(0, 5)}-${cep.slice(5, 8)}`;
-  };
 
   const handleSubmit = async (values: any) => {
     try {
@@ -154,52 +178,33 @@ const SocioModal: React.FC<SocioModalProps> = ({ visible, onCancel, onSubmit, in
     form.setFieldsValue({ status: checked ? 'ATIVO' : 'INATIVO' });
   };
 
-  return (
-    <Modal
-      open={visible}
-      title={null}
-      onCancel={onCancel}
-      footer={null}
-      closable={false}
-      centered
-      width={1100}
-      style={{ borderRadius: 0, padding: 0 }}
-      bodyStyle={{ padding: 0, backgroundColor: '#f5f7e9', border: 'none' }}
-      modalRender={(node) => node}
-      wrapClassName="delete-modal-wrapper"
-      destroyOnClose
-    >
-      <div style={{ padding: 0 }}>
-        <div style={{ 
-          backgroundColor: '#F2311F', 
-          color: 'white', 
-          padding: '10px 20px',
-          textAlign: 'left',
-          height: '60px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center'
-        }}>
-          <div style={{ fontSize: '22px', fontWeight: 'bold', lineHeight: '1.2' }}>SINDPLAST-AM</div>
-          <div style={{ fontSize: '11px', lineHeight: '1.2' }}>
-            SINDICATO DOS TRABALHADORES NAS INDÚSTRIAS DE MATERIAL PLÁSTICO DE MANAUS E DO ESTADO DO AMAZONAS
-          </div>
-        </div>
-        
-        <div style={{ padding: '20px 30px' }}>
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={handleSubmit}
-            autoComplete="off"
-          >
+  const next = async () => {
+    try {
+      const values = await form.validateFields();
+      setCurrentStep(currentStep + 1);
+    } catch (error) {
+      console.log('Validation failed:', error);
+    }
+  };
+
+  const prev = () => {
+    setCurrentStep(currentStep - 1);
+  };
+
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 0:
+        return (
+          <div>
             <div style={{ 
               display: 'flex', 
               alignItems: 'center',
               justifyContent: 'space-between',
               marginBottom: '20px'
             }}>
-              <h4 style={{ borderBottom: '1px solid #ccc', paddingBottom: '8px', margin: 0, flex: 1 }}>Dados Pessoais</h4>
+              <h4 style={{ borderBottom: '1px solid #ccc', paddingBottom: '8px', margin: 0, flex: 1 }}>
+                Dados Pessoais
+              </h4>
               <div style={{ 
                 display: 'flex', 
                 alignItems: 'center',
@@ -377,8 +382,15 @@ const SocioModal: React.FC<SocioModalProps> = ({ visible, onCancel, onSubmit, in
                 </Form.Item>
               </Col>
             </Row>
+          </div>
+        );
 
-            <h4 style={{ borderBottom: '1px solid #ccc', paddingBottom: '8px', marginTop: '20px' }}>Endereço</h4>
+      case 1:
+        return (
+          <div>
+            <h4 style={{ borderBottom: '1px solid #ccc', paddingBottom: '8px', marginBottom: '20px' }}>
+              Endereço
+            </h4>
             <Row gutter={16}>
               <Col span={13}>
                 <Form.Item 
@@ -434,9 +446,68 @@ const SocioModal: React.FC<SocioModalProps> = ({ visible, onCancel, onSubmit, in
                 </Form.Item>
               </Col>
             </Row>
+          </div>
+        );
 
-            {/* CAMPOS EXTRAS - NOVA SESSÃO */}
-            <h4 style={{ borderBottom: '1px solid #ccc', paddingBottom: '8px', marginTop: '20px' }}>Dados Sindicais e Profissionais</h4>
+      case 2:
+        return (
+          <div>
+            <h4 style={{ borderBottom: '1px solid #ccc', paddingBottom: '8px', marginBottom: '20px' }}>
+              Contato
+            </h4>
+            <Row gutter={16}>
+              <Col span={8}>
+                <Form.Item 
+                  name="celular" 
+                  label="Celular"
+                >
+                  <Input placeholder="(92) 98888-8888" />
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item 
+                  name="telefone" 
+                  label="Telefone"
+                >
+                  <Input placeholder="(92) 3333-3333" />
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item 
+                  name="redeSocial" 
+                  label="Rede Social"
+                >
+                  <Input placeholder="@perfil" />
+                </Form.Item>
+              </Col>
+            </Row>
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item 
+                  name="pai" 
+                  label="Nome do Pai"
+                >
+                  <Input placeholder="NOME COMPLETO DO PAI" style={{ textTransform: 'uppercase' }} />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item 
+                  name="mae" 
+                  label="Nome da Mãe"
+                >
+                  <Input placeholder="NOME COMPLETO DA MÃE" style={{ textTransform: 'uppercase' }} />
+                </Form.Item>
+              </Col>
+            </Row>
+          </div>
+        );
+
+      case 3:
+        return (
+          <div>
+            <h4 style={{ borderBottom: '1px solid #ccc', paddingBottom: '8px', marginBottom: '20px' }}>
+              Dados Sindicais e Profissionais
+            </h4>
             <Row gutter={16}>
               <Col span={4}>
                 <Form.Item name="matricula" label="Matrícula">
@@ -485,11 +556,6 @@ const SocioModal: React.FC<SocioModalProps> = ({ visible, onCancel, onSubmit, in
                   <Input placeholder="CNPJ" />
                 </Form.Item>
               </Col>
-              <Col span={5}>
-                <Form.Item name="telefone" label="Telefone">
-                  <Input placeholder="TELEFONE" />
-                </Form.Item>
-              </Col>
             </Row>
             <Row gutter={16}>
               <Col span={6}>
@@ -526,58 +592,155 @@ const SocioModal: React.FC<SocioModalProps> = ({ visible, onCancel, onSubmit, in
             <Row gutter={16}>
               <Col span={24}>
                 <Form.Item name="observacao" label="Observação">
-                  <Input.TextArea placeholder="Observações gerais" rows={2} />
+                  <Input.TextArea placeholder="Observações gerais" rows={3} />
                 </Form.Item>
               </Col>
             </Row>
+          </div>
+        );
 
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'center', 
-              gap: '30px',
-              marginTop: '20px',
-              paddingBottom: '20px'
-            }}>
-              <Button
-                htmlType="submit"
-                loading={loading}
-                style={{ 
-                  width: '180px', 
-                  height: '50px',
-                  fontSize: '18px',
-                  fontWeight: 'bold',
-                  backgroundColor: '#4caf50',
-                  borderColor: '#4caf50',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                <SaveOutlined style={{ marginRight: '8px' }} /> SALVAR
-              </Button>
-              
-              <Button
-                onClick={onCancel}
-                style={{ 
-                  width: '180px',
-                  height: '50px',
-                  fontSize: '18px',
-                  fontWeight: 'bold',
-                  backgroundColor: '#f44336',
-                  borderColor: '#f44336',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                <CloseCircleFilled style={{ marginRight: '8px' }} /> CANCELAR
-              </Button>
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <Modal
+      open={visible}
+      title={null}
+      onCancel={onCancel}
+      footer={null}
+      closable={false}
+      centered
+      width={1100}
+      style={{ borderRadius: 0, padding: 0 }}
+      styles={{ body: { padding: 0, backgroundColor: '#f5f7e9', border: 'none' } }}
+      modalRender={(node) => node}
+      wrapClassName="socio-modal-wrapper"
+      destroyOnClose
+    >
+      <div style={{ padding: 0 }}>
+        <div style={{ 
+          backgroundColor: '#F2311F', 
+          color: 'white', 
+          padding: '10px 20px',
+          textAlign: 'left',
+          height: '60px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          cursor: 'pointer'
+        }}
+        onClick={() => navigate('/home')}
+        >
+          <div style={{ fontSize: '22px', fontWeight: 'bold', lineHeight: '1.2' }}>SINDPLAST-AM</div>
+          <div style={{ fontSize: '11px', lineHeight: '1.2' }}>
+            SINDICATO DOS TRABALHADORES NAS INDÚSTRIAS DE MATERIAL PLÁSTICO DE MANAUS E DO ESTADO DO AMAZONAS
+          </div>
+        </div>
+
+        <div style={{ padding: '20px 30px' }}>
+          <Steps current={currentStep} items={steps} style={{ marginBottom: '30px' }} />
+          
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={handleSubmit}
+            autoComplete="off"
+          >
+            {renderStepContent()}
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '30px', paddingBottom: '10px' }}>
+              <div>
+                {currentStep > 0 && (
+                  <Button 
+                    onClick={prev}
+                    icon={<ArrowLeftOutlined />}
+                    style={{ 
+                      height: '40px',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      backgroundColor: '#666',
+                      borderColor: '#666',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    ANTERIOR
+                  </Button>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px' }}>
+                {currentStep < steps.length - 1 && (
+                  <Button 
+                    onClick={next}
+                    icon={<ArrowRightOutlined />}
+                    style={{ 
+                      height: '40px',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      backgroundColor: '#1890ff',
+                      borderColor: '#1890ff',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    PRÓXIMO
+                  </Button>
+                )}
+
+                {currentStep === steps.length - 1 && (
+                  <Button 
+                    htmlType="submit" 
+                    loading={loading}
+                    icon={<SaveOutlined />}
+                    style={{ 
+                      height: '40px',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      backgroundColor: '#4caf50',
+                      borderColor: '#4caf50',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    SALVAR
+                  </Button>
+                )}
+
+                <Button
+                  onClick={onCancel}
+                  icon={<CloseCircleFilled />}
+                  style={{ 
+                    height: '40px',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    backgroundColor: '#f44336',
+                    borderColor: '#f44336',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  CANCELAR
+                </Button>
+              </div>
             </div>
           </Form>
         </div>

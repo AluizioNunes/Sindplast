@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Tabs, Tree, Select, Card, Input, Form, Switch, Spin, Row, Col, Button } from 'antd';
-import { CheckCircleFilled, CloseCircleFilled, SaveOutlined, UserOutlined, TeamOutlined } from '@ant-design/icons';
+import { SaveOutlined, UserOutlined, TeamOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import CustomLoader from '../components/CustomLoader';
+import ConfirmModal from '../components/ConfirmModal';
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -43,6 +45,7 @@ const Permissoes: React.FC = () => {
   const [loadingPerfis, setLoadingPerfis] = useState(false);
   const [loadingUsuarios, setLoadingUsuarios] = useState(false);
   const [loadingPermissoes, setLoadingPermissoes] = useState(false);
+  const [savingPermissoes, setSavingPermissoes] = useState(false);
   const [sobreescreverPermissoes, setSobreescreverPermissoes] = useState(false);
   const [pesquisa, setPesquisa] = useState('');
 
@@ -314,7 +317,7 @@ const Permissoes: React.FC = () => {
 
   // Confirmar salvamento de permissões
   const confirmarSalvarPermissoes = async () => {
-    setLoadingPermissoes(true);
+    setSavingPermissoes(true);
     
     try {
       // Simulação do salvamento - substituir pelo endpoint real da API
@@ -325,14 +328,14 @@ const Permissoes: React.FC = () => {
       
       // Simulação bem-sucedida
       setTimeout(() => {
-        setLoadingPermissoes(false);
+        setSavingPermissoes(false);
         setConfirmModalVisible(false);
         
         // Notificar o usuário do sucesso
         toast.success(`Permissões ${activeTab === 'perfil' ? 'do perfil' : 'do usuário'} atualizadas com sucesso!`);
       }, 800);
     } catch (error) {
-      setLoadingPermissoes(false);
+      setSavingPermissoes(false);
       setConfirmModalVisible(false);
       toast.error(`Erro ao salvar permissões. Tente novamente.`);
     }
@@ -380,6 +383,7 @@ const Permissoes: React.FC = () => {
                     onChange={handlePerfilChange}
                     loading={loadingPerfis}
                     disabled={loadingPerfis}
+                    aria-label="Selecione um perfil"
                   >
                     {perfis.map(perfil => (
                       <Option key={perfil.IdPerfil} value={perfil.IdPerfil}>
@@ -396,6 +400,7 @@ const Permissoes: React.FC = () => {
                     value={pesquisa}
                     onChange={e => setPesquisa(e.target.value)}
                     allowClear
+                    aria-label="Campo de pesquisa de permissões"
                   />
                 </Form.Item>
               </Col>
@@ -407,6 +412,7 @@ const Permissoes: React.FC = () => {
                 onClick={salvarPermissoes} 
                 style={{ marginBottom: '16px' }}
                 disabled={loadingPermissoes}
+                aria-label="Salvar permissões do perfil"
               >
                 <SaveOutlined /> Salvar Permissões
               </Button>
@@ -414,8 +420,7 @@ const Permissoes: React.FC = () => {
             
             {loadingPermissoes ? (
               <div style={{ textAlign: 'center', padding: '40px' }}>
-                <Spin size="large" />
-                <p style={{ marginTop: '16px' }}>Carregando permissões...</p>
+                <CustomLoader message="Carregando permissões..." />
               </div>
             ) : (
               perfilSelecionado ? (
@@ -426,9 +431,10 @@ const Permissoes: React.FC = () => {
                   onCheck={(checked) => onCheckChange(checked as React.Key[])}
                   treeData={permissoesFiltradas}
                   defaultExpandAll
+                  aria-label="Árvore de permissões do perfil"
                 />
               ) : (
-                <div style={{ textAlign: 'center', padding: '40px' }}>
+                <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
                   <p>Selecione um perfil para gerenciar suas permissões</p>
                 </div>
               )
@@ -450,6 +456,7 @@ const Permissoes: React.FC = () => {
                     disabled={loadingUsuarios}
                     showSearch
                     optionFilterProp="children"
+                    aria-label="Selecione um usuário"
                   >
                     {usuarios.map(usuario => (
                       <Option key={usuario.IdUsuarios} value={usuario.IdUsuarios}>
@@ -466,6 +473,7 @@ const Permissoes: React.FC = () => {
                     value={pesquisa}
                     onChange={e => setPesquisa(e.target.value)}
                     allowClear
+                    aria-label="Campo de pesquisa de permissões"
                   />
                 </Form.Item>
               </Col>
@@ -478,6 +486,7 @@ const Permissoes: React.FC = () => {
                     checked={sobreescreverPermissoes} 
                     onChange={setSobreescreverPermissoes}
                     style={{ marginRight: '8px' }}
+                    aria-label="Sobreescrever permissões do perfil"
                   />
                   <span>Sobreescrever permissões do perfil (por padrão as permissões são herdadas do perfil)</span>
                 </Form.Item>
@@ -487,6 +496,7 @@ const Permissoes: React.FC = () => {
                   onClick={salvarPermissoes} 
                   style={{ marginBottom: '16px' }}
                   disabled={loadingPermissoes}
+                  aria-label="Salvar permissões do usuário"
                 >
                   <SaveOutlined /> Salvar Permissões
                 </Button>
@@ -495,8 +505,7 @@ const Permissoes: React.FC = () => {
             
             {loadingPermissoes ? (
               <div style={{ textAlign: 'center', padding: '40px' }}>
-                <Spin size="large" />
-                <p style={{ marginTop: '16px' }}>Carregando permissões...</p>
+                <CustomLoader message="Carregando permissões..." />
               </div>
             ) : (
               usuarioSelecionado ? (
@@ -507,9 +516,10 @@ const Permissoes: React.FC = () => {
                   onCheck={(checked) => onCheckChange(checked as React.Key[])}
                   treeData={permissoesFiltradas}
                   defaultExpandAll
+                  aria-label="Árvore de permissões do usuário"
                 />
               ) : (
-                <div style={{ textAlign: 'center', padding: '40px' }}>
+                <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
                   <p>Selecione um usuário para gerenciar suas permissões</p>
                 </div>
               )
@@ -519,98 +529,18 @@ const Permissoes: React.FC = () => {
       </Card>
       
       {/* Modal de confirmação */}
-      <Modal
-        title={null}
-        open={confirmModalVisible}
+      <ConfirmModal
+        visible={confirmModalVisible}
+        title="Confirmar alterações"
+        content={`Todas as permissões selecionadas serão aplicadas ${activeTab === 'perfil' 
+          ? 'para o perfil selecionado' 
+          : `para o usuário selecionado${sobreescreverPermissoes ? ' (sobreescrevendo as permissões do perfil)' : ''}`}.`}
+        okText="Sim, confirmar"
+        cancelText="Não"
+        onOk={confirmarSalvarPermissoes}
         onCancel={() => setConfirmModalVisible(false)}
-        footer={null}
-        closable={false}
-        centered
-        width={650}
-        style={{ borderRadius: 0, padding: 0 }}
-        bodyStyle={{ padding: 0, backgroundColor: '#f5f7e9', border: 'none' }}
-        modalRender={(node) => node}
-        wrapClassName="delete-modal-wrapper"
-      >
-        <div style={{ padding: 0 }}>
-          <div style={{ 
-            backgroundColor: '#F2311F', 
-            color: 'white', 
-            padding: '10px 20px',
-            textAlign: 'left',
-            height: '60px',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center'
-          }}>
-            <div style={{ fontSize: '22px', fontWeight: 'bold', lineHeight: '1.2' }}>SINDPLÁST-AM</div>
-            <div style={{ fontSize: '11px', lineHeight: '1.2' }}>
-              SINDICATO DOS TRABALHADORES NAS INDÚSTRIAS DE MATERIAL PLÁSTICO DE MANAUS E DO ESTADO DO AMAZONAS
-            </div>
-          </div>
-          
-          <div style={{ padding: '60px 20px', textAlign: 'center' }}>
-            <h3 style={{ color: '#F2311F', fontSize: '22px', fontWeight: 'bold' }}>
-              CONFIRMAR ALTERAÇÕES NAS PERMISSÕES?
-            </h3>
-            <p style={{ marginTop: '16px' }}>
-              Todas as permissões selecionadas serão aplicadas 
-              {activeTab === 'perfil' 
-                ? ' para o perfil selecionado' 
-                : ` para o usuário selecionado${sobreescreverPermissoes ? ' (sobreescrevendo as permissões do perfil)' : ''}`
-              }.
-            </p>
-          </div>
-          
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'center', 
-            gap: '30px',
-            padding: '20px 40px 60px'
-          }}>
-            <Button
-              onClick={confirmarSalvarPermissoes}
-              loading={loadingPermissoes}
-              style={{ 
-                width: '180px', 
-                height: '50px',
-                fontSize: '18px',
-                fontWeight: 'bold',
-                backgroundColor: '#4caf50',
-                borderColor: '#4caf50',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <CheckCircleFilled style={{ marginRight: '8px' }} /> SIM
-            </Button>
-            
-            <Button
-              onClick={() => setConfirmModalVisible(false)}
-              style={{ 
-                width: '180px',
-                height: '50px',
-                fontSize: '18px',
-                fontWeight: 'bold',
-                backgroundColor: '#f44336',
-                borderColor: '#f44336',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <CloseCircleFilled style={{ marginRight: '8px' }} /> NAO
-            </Button>
-          </div>
-        </div>
-      </Modal>
+        loading={savingPermissoes}
+      />
     </div>
   );
 };

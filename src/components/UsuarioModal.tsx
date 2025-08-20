@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Modal, Form, Input, Row, Col, Button, Select } from 'antd';
 import { SaveOutlined, CloseCircleFilled } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 
 export interface UsuarioForm {
   Nome: string;
@@ -23,8 +24,17 @@ interface UsuarioModalProps {
   perfis: { IdPerfil: number; Perfil: string }[];
 }
 
+const formatCPF = (value: string) => {
+  const cpf = value.replace(/\D/g, '');
+  if (cpf.length <= 3) return cpf;
+  if (cpf.length <= 6) return `${cpf.slice(0, 3)}.${cpf.slice(3)}`;
+  if (cpf.length <= 9) return `${cpf.slice(0, 3)}.${cpf.slice(3, 6)}.${cpf.slice(6)}`;
+  return `${cpf.slice(0, 3)}.${cpf.slice(3, 6)}.${cpf.slice(6, 9)}-${cpf.slice(9, 11)}`;
+};
+
 const UsuarioModal: React.FC<UsuarioModalProps> = ({ visible, onCancel, onSubmit, initialValues, loading, isEdit, perfis }) => {
   const [form] = Form.useForm();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (visible) {
@@ -38,14 +48,6 @@ const UsuarioModal: React.FC<UsuarioModalProps> = ({ visible, onCancel, onSubmit
       }
     }
   }, [visible, initialValues, form]);
-
-  const formatCPF = (value: string) => {
-    const cpf = value.replace(/\D/g, '');
-    if (cpf.length <= 3) return cpf;
-    if (cpf.length <= 6) return `${cpf.slice(0, 3)}.${cpf.slice(3)}`;
-    if (cpf.length <= 9) return `${cpf.slice(0, 3)}.${cpf.slice(3, 6)}.${cpf.slice(6)}`;
-    return `${cpf.slice(0, 3)}.${cpf.slice(3, 6)}.${cpf.slice(6, 9)}-${cpf.slice(9, 11)}`;
-  };
 
   const handleSubmit = async (values: UsuarioForm) => {
     try {
@@ -84,22 +86,26 @@ const UsuarioModal: React.FC<UsuarioModalProps> = ({ visible, onCancel, onSubmit
       centered
       width={650}
       style={{ borderRadius: 0, padding: 0 }}
-      bodyStyle={{ padding: 0, backgroundColor: '#f5f7e9', border: 'none' }}
+      styles={{ body: { padding: 0, backgroundColor: '#f5f7e9', border: 'none' } }}
       modalRender={(node) => node}
-      wrapClassName="delete-modal-wrapper"
+      wrapClassName="usuario-modal-wrapper"
       destroyOnClose
     >
       <div style={{ padding: 0 }}>
-        <div style={{ 
-          backgroundColor: '#F2311F', 
-          color: 'white', 
-          padding: '10px 20px',
-          textAlign: 'left',
-          height: '60px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center'
-        }}>
+        <div 
+          style={{ 
+            backgroundColor: '#F2311F', 
+            color: 'white', 
+            padding: '10px 20px',
+            textAlign: 'left',
+            height: '60px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            cursor: 'pointer'
+          }}
+          onClick={() => navigate('/home')}
+        >
           <div style={{ fontSize: '22px', fontWeight: 'bold', lineHeight: '1.2' }}>SINDPLAST-AM</div>
           <div style={{ fontSize: '11px', lineHeight: '1.2' }}>
             SINDICATO DOS TRABALHADORES NAS INDÚSTRIAS DE MATERIAL PLÁSTICO DE MANAUS E DO ESTADO DO AMAZONAS
@@ -107,7 +113,13 @@ const UsuarioModal: React.FC<UsuarioModalProps> = ({ visible, onCancel, onSubmit
         </div>
         
         <div style={{ padding: '20px 30px' }}>
-          <h3 style={{ color: '#F2311F', fontSize: '20px', fontWeight: 'bold', textAlign: 'center', marginBottom: '20px' }}>
+          <h3 style={{ 
+            color: '#F2311F', 
+            fontSize: '20px', 
+            fontWeight: 'bold', 
+            textAlign: 'center', 
+            marginBottom: '20px' 
+          }}>
             {isEdit ? 'EDITAR USUÁRIO' : 'CADASTRAR NOVO USUÁRIO'}
           </h3>
           
@@ -131,10 +143,6 @@ const UsuarioModal: React.FC<UsuarioModalProps> = ({ visible, onCancel, onSubmit
                     placeholder="NOME COMPLETO" 
                     size="large" 
                     style={{ textTransform: 'uppercase' }}
-                    onChange={(e) => {
-                      const upperValue = e.target.value.toUpperCase();
-                      form.setFieldValue('Nome', upperValue);
-                    }}
                   />
                 </Form.Item>
               </Col>
@@ -176,10 +184,6 @@ const UsuarioModal: React.FC<UsuarioModalProps> = ({ visible, onCancel, onSubmit
                     placeholder="FUNÇÃO DO USUÁRIO" 
                     size="large"
                     style={{ textTransform: 'uppercase' }}
-                    onChange={(e) => {
-                      const upperValue = e.target.value.toUpperCase();
-                      form.setFieldValue('Funcao', upperValue);
-                    }}
                   />
                 </Form.Item>
               </Col>
@@ -210,10 +214,6 @@ const UsuarioModal: React.FC<UsuarioModalProps> = ({ visible, onCancel, onSubmit
                     placeholder="SE VAZIO, SERÁ O CPF SEM MÁSCARA" 
                     size="large"
                     style={{ textTransform: 'uppercase' }}
-                    onChange={(e) => {
-                      const upperValue = e.target.value.toUpperCase();
-                      form.setFieldValue('Usuario', upperValue);
-                    }}
                   />
                 </Form.Item>
               </Col>
@@ -262,55 +262,55 @@ const UsuarioModal: React.FC<UsuarioModalProps> = ({ visible, onCancel, onSubmit
                 </Form.Item>
               </Col>
             </Row>
-            <Form.Item style={{ marginTop: '30px' }}>
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
-                gap: '30px',
-              }}>
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  loading={loading}
-                  style={{ 
-                    width: '180px', 
-                    height: '45px',
-                    fontSize: '16px',
-                    fontWeight: 'bold',
-                    backgroundColor: '#4caf50',
-                    borderColor: '#4caf50',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <SaveOutlined style={{ marginRight: '8px' }} /> SALVAR
-                </Button>
-                
-                <Button
-                  onClick={onCancel}
-                  style={{ 
-                    width: '180px',
-                    height: '45px',
-                    fontSize: '16px',
-                    fontWeight: 'bold',
-                    backgroundColor: '#f44336',
-                    borderColor: '#f44336',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <CloseCircleFilled style={{ marginRight: '8px' }} /> CANCELAR
-                </Button>
-              </div>
-            </Form.Item>
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              gap: '30px',
+              marginTop: '30px',
+              paddingBottom: '10px'
+            }}>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading}
+                style={{ 
+                  width: '180px', 
+                  height: '45px',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  backgroundColor: '#4caf50',
+                  borderColor: '#4caf50',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <SaveOutlined style={{ marginRight: '8px' }} /> SALVAR
+              </Button>
+              
+              <Button
+                onClick={onCancel}
+                style={{ 
+                  width: '180px',
+                  height: '45px',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  backgroundColor: '#f44336',
+                  borderColor: '#f44336',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <CloseCircleFilled style={{ marginRight: '8px' }} /> CANCELAR
+              </Button>
+            </div>
           </Form>
         </div>
       </div>

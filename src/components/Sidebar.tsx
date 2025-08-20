@@ -1,6 +1,7 @@
 import React from 'react';
 import { Layout, Menu } from 'antd';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import {
   UserOutlined,
   TeamOutlined,
@@ -19,7 +20,9 @@ import {
   TransactionOutlined,
   PayCircleOutlined,
   MoneyCollectOutlined,
-  AccountBookOutlined
+  AccountBookOutlined,
+  BarChartOutlined,
+  HomeOutlined
 } from '@ant-design/icons';
 
 const { Sider } = Layout;
@@ -31,6 +34,7 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const getItem = (
     label: React.ReactNode,
@@ -44,18 +48,14 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
       label,
   });
 
-  const handleLogout = () => {
-    // Limpar dados do localStorage
-    localStorage.removeItem('usuarioLogado');
-    localStorage.removeItem('token');
-    localStorage.removeItem('auth');
-    
-    // Redirecionar para login
-    window.location.href = '/'; // Usando href para forçar recarregar a página inteira
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
   };
 
   const items = [
-    getItem('Dashboard', 'home', <DashboardOutlined />),
+    getItem('Home', 'home', <HomeOutlined />),
+    getItem('Dashboard', 'dashboard', <BarChartOutlined />),
     getItem('Cadastros', 'cadastros', <IdcardOutlined />, [
       getItem('Empresas', 'empresas', <BankOutlined />),
       getItem('Funcionários', 'funcionarios', <TeamOutlined />),
@@ -78,7 +78,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
       getItem('Permissões', 'permissoes', <SafetyOutlined />),
       getItem('Perfil', 'perfil', <ProfileOutlined />),
     ]),
-    getItem('Parâmetros', 'parametros', <SettingOutlined />,[
+    getItem('Parâmetros', 'parametros', <SettingOutlined />,[ 
     getItem('Alíquotas', 'aliquotas', <PercentageOutlined />),]),
     getItem('Sair', 'logout', <LogoutOutlined />),
   ];
@@ -93,7 +93,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
   };
 
   return (
-    <Sider trigger={null} collapsible collapsed={collapsed} width={260} style={{ minHeight: '100vh' }}>
+    <Sider trigger={null} collapsible collapsed={collapsed} width={260} style={{ minHeight: '100vh', background: '#F2311F' }}>
       <div className="logo" />
       <Menu
         theme="dark"

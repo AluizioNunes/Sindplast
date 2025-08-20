@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react';
 import { Modal, Form, Input, Button } from 'antd';
+import { SaveOutlined, CloseCircleFilled } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 
 interface PermissaoForm {
   Nome: string;
@@ -17,6 +19,7 @@ interface PermissoesModalProps {
 
 const PermissoesModal: React.FC<PermissoesModalProps> = ({ visible, onCancel, onSubmit, initialValues }) => {
   const [form] = Form.useForm();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (visible) {
@@ -37,36 +40,131 @@ const PermissoesModal: React.FC<PermissoesModalProps> = ({ visible, onCancel, on
   return (
     <Modal
       open={visible}
-      title={initialValues ? 'Editar Permissão' : 'Nova Permissão'}
+      title={null}
       onCancel={onCancel}
       footer={null}
+      closable={false}
+      centered
+      width={650}
+      style={{ borderRadius: 0, padding: 0 }}
+      styles={{ body: { padding: 0, backgroundColor: '#f5f7e9', border: 'none' } }}
+      modalRender={(node) => node}
+      wrapClassName="permissoes-modal-wrapper"
       destroyOnClose
     >
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleFinish}
-        initialValues={initialValues}
-      >
-        <Form.Item name="Nome" label="Nome" rules={[{ required: true, message: 'Informe o nome da permissão' }]}> 
-          <Input placeholder="Nome da permissão" />
-        </Form.Item>
-        <Form.Item name="Descricao" label="Descrição">
-          <Input placeholder="Descrição da permissão" />
-        </Form.Item>
-        <Form.Item name="Cadastrante" label="Cadastrante">
-          <Input placeholder="Cadastrante" disabled value={initialValues?.Cadastrante || localStorage.getItem('usuarioLogado') || 'SISTEMA'} />
-        </Form.Item>
-        {initialValues?.DataCadastro && (
-          <Form.Item label="Data de Cadastro">
-            <Input value={new Date(initialValues.DataCadastro).toLocaleString()} disabled />
-          </Form.Item>
-        )}
-        <Form.Item style={{ textAlign: 'right' }}>
-          <Button onClick={onCancel} style={{ marginRight: 8 }}>Cancelar</Button>
-          <Button type="primary" htmlType="submit">Salvar</Button>
-        </Form.Item>
-      </Form>
+      <div style={{ padding: 0 }}>
+        <div 
+          style={{ 
+            backgroundColor: '#F2311F', 
+            color: 'white', 
+            padding: '10px 20px',
+            textAlign: 'left',
+            height: '60px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            cursor: 'pointer'
+          }}
+          onClick={() => navigate('/home')}
+        >
+          <div style={{ fontSize: '22px', fontWeight: 'bold', lineHeight: '1.2' }}>SINDPLAST-AM</div>
+          <div style={{ fontSize: '11px', lineHeight: '1.2' }}>
+            SINDICATO DOS TRABALHADORES NAS INDÚSTRIAS DE MATERIAL PLÁSTICO DE MANAUS E DO ESTADO DO AMAZONAS
+          </div>
+        </div>
+        
+        <div style={{ padding: '20px 30px' }}>
+          <h3 style={{ 
+            color: '#F2311F', 
+            fontSize: '20px', 
+            fontWeight: 'bold', 
+            textAlign: 'center', 
+            marginBottom: '20px' 
+          }}>
+            {initialValues ? 'EDITAR PERMISSÃO' : 'CADASTRAR NOVA PERMISSÃO'}
+          </h3>
+          
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={handleFinish}
+            initialValues={initialValues}
+          >
+            <Form.Item name="Nome" label="Nome" rules={[{ required: true, message: 'Informe o nome da permissão' }]}> 
+              <Input 
+                placeholder="Nome da permissão" 
+                style={{ textTransform: 'uppercase' }}
+              />
+            </Form.Item>
+            <Form.Item name="Descricao" label="Descrição">
+              <Input 
+                placeholder="Descrição da permissão" 
+                style={{ textTransform: 'uppercase' }}
+              />
+            </Form.Item>
+            <Form.Item name="Cadastrante" label="Cadastrante">
+              <Input 
+                placeholder="Cadastrante" 
+                disabled 
+                value={initialValues?.Cadastrante || localStorage.getItem('usuarioLogado') || 'SISTEMA'} 
+              />
+            </Form.Item>
+            {initialValues?.DataCadastro && (
+              <Form.Item label="Data de Cadastro">
+                <Input value={new Date(initialValues.DataCadastro).toLocaleString()} disabled />
+              </Form.Item>
+            )}
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              gap: '30px',
+              marginTop: '30px',
+              paddingBottom: '10px'
+            }}>
+              <Button
+                type="primary"
+                htmlType="submit"
+                style={{ 
+                  width: '180px', 
+                  height: '45px',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  backgroundColor: '#4caf50',
+                  borderColor: '#4caf50',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <SaveOutlined style={{ marginRight: '8px' }} /> SALVAR
+              </Button>
+              
+              <Button
+                onClick={onCancel}
+                style={{ 
+                  width: '180px',
+                  height: '45px',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  backgroundColor: '#f44336',
+                  borderColor: '#f44336',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <CloseCircleFilled style={{ marginRight: '8px' }} /> CANCELAR
+              </Button>
+            </div>
+          </Form>
+        </div>
+      </div>
     </Modal>
   );
 };

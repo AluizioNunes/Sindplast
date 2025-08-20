@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Table, Button, Modal, Tag, Checkbox, Tooltip, Input, Card, List, Avatar, Space } from 'antd';
 import { 
   EditOutlined, 
@@ -273,12 +273,14 @@ const Socios: React.FC = () => {
             <EditOutlined 
               style={{ cursor: 'pointer', color: '#1677ff', fontSize: '16px' }} 
               onClick={() => handleEdit(record)} 
+              aria-label={`Editar sócio ${record.nome}`}
             />
           </Tooltip>
           <Tooltip title="Imprimir ficha">
             <PrinterOutlined 
               style={{ cursor: 'pointer', color: '#1677ff', fontSize: '16px' }} 
               onClick={() => handlePrintSocio(record)} 
+              aria-label={`Imprimir ficha do sócio ${record.nome}`}
             />
           </Tooltip>
           <Tooltip title="Excluir">
@@ -290,7 +292,7 @@ const Socios: React.FC = () => {
                 opacity: deletingId === record.id ? 0.5 : 1
               }} 
               onClick={() => deletingId !== record.id && handleDeleteSocio(record)} 
-              spin={deletingId === record.id}
+              aria-label={`Excluir sócio ${record.nome}`}
             />
           </Tooltip>
         </Space>
@@ -326,17 +328,21 @@ const Socios: React.FC = () => {
   };
 
   // Filtra colunas a exibir
-  const columns = allColumns.filter(col => 
-    visibleColumns.includes(col.key as string) || 
-    (col.key === 'actions' && visibleColumns.includes('actions'))
-  );
+  const columns = useMemo(() => {
+    return allColumns.filter(col => 
+      visibleColumns.includes(col.key as string) || 
+      (col.key === 'actions' && visibleColumns.includes('actions'))
+    );
+  }, [visibleColumns]);
 
   // Filtrar sócios com base na pesquisa
-  const filteredSocios = socios.filter(socio => 
-    (socio.nome?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
-    (socio.cpf?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
-    (socio.rg?.toLowerCase() || '').includes(searchText.toLowerCase())
-  );
+  const filteredSocios = useMemo(() => {
+    return socios.filter(socio => 
+      (socio.nome?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
+      (socio.cpf?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
+      (socio.rg?.toLowerCase() || '').includes(searchText.toLowerCase())
+    );
+  }, [socios, searchText]);
 
   // Contagem total de sócios
   const totalSocios = filteredSocios.length;
@@ -424,6 +430,7 @@ const Socios: React.FC = () => {
             <Button 
               icon={<SettingOutlined />}
               onClick={() => setColumnSelectorVisible(true)}
+              aria-label="Gerenciar colunas visíveis"
             >
               COLUNAS
             </Button>
@@ -434,6 +441,7 @@ const Socios: React.FC = () => {
               type={viewMode === 'list' ? 'primary' : 'default'}
               onClick={() => setViewMode('list')}
               icon={<UnorderedListOutlined />}
+              aria-label="Visualizar em lista"
             >
               LISTA
             </Button>
@@ -442,6 +450,7 @@ const Socios: React.FC = () => {
               type={viewMode === 'cards' ? 'primary' : 'default'}
               onClick={() => setViewMode('cards')}
               icon={<AppstoreOutlined />}
+              aria-label="Visualizar em cartões"
             >
               CARTÕES
             </Button>
@@ -450,6 +459,7 @@ const Socios: React.FC = () => {
               type={viewMode === 'table' ? 'primary' : 'default'}
               onClick={() => setViewMode('table')}
               icon={<TableOutlined />}
+              aria-label="Visualizar em tabela"
             >
               TABELA
             </Button>
@@ -459,17 +469,17 @@ const Socios: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <Button.Group style={{ marginRight: '10px' }}>
             <Tooltip title="Imprimir lista">
-              <Button icon={<PrinterOutlined />}>
+              <Button icon={<PrinterOutlined />} aria-label="Imprimir lista de sócios">
                 IMPRIMIR
               </Button>
             </Tooltip>
             <Tooltip title="Exportar dados">
-              <Button icon={<ExportOutlined />}>
+              <Button icon={<ExportOutlined />} aria-label="Exportar dados de sócios">
                 EXPORTAR
               </Button>
             </Tooltip>
             <Tooltip title="Filtrar dados">
-              <Button icon={<FilterOutlined />}>
+              <Button icon={<FilterOutlined />} aria-label="Filtrar dados de sócios">
                 FILTRAR
               </Button>
             </Tooltip>
@@ -481,6 +491,7 @@ const Socios: React.FC = () => {
             style={{ width: 300 }}
             value={searchText}
             onChange={e => setSearchText(e.target.value)}
+            aria-label="Campo de pesquisa de sócios"
           />
           
           <Button
@@ -491,6 +502,7 @@ const Socios: React.FC = () => {
               backgroundColor: '#4caf50',
               borderColor: '#4caf50',
             }}
+            aria-label="Cadastrar novo sócio"
           >
             NOVO SÓCIO
           </Button>
@@ -523,15 +535,16 @@ const Socios: React.FC = () => {
             pageSizeOptions: ['10', '20', '50'],
             showTotal: (total) => `Total de ${total} sócios`,
           }}
+          locale={{ emptyText: 'Nenhum sócio encontrado' }}
           renderItem={socio => {
             return (
               <List.Item
                 actions={[
                   <Tooltip title="Editar">
-                    <EditOutlined key="edit" onClick={() => handleEdit(socio)} />
+                    <EditOutlined key="edit" onClick={() => handleEdit(socio)} aria-label={`Editar sócio ${socio.nome}`} />
                   </Tooltip>,
                   <Tooltip title="Imprimir ficha">
-                    <PrinterOutlined key="print" onClick={() => handlePrintSocio(socio)} />
+                    <PrinterOutlined key="print" onClick={() => handlePrintSocio(socio)} aria-label={`Imprimir ficha do sócio ${socio.nome}`} />
                   </Tooltip>,
                   <Tooltip title="Excluir">
                     <DeleteOutlined 
@@ -541,7 +554,7 @@ const Socios: React.FC = () => {
                         cursor: deletingId === socio.id ? 'wait' : 'pointer',
                         opacity: deletingId === socio.id ? 0.5 : 1
                       }}
-                      spin={deletingId === socio.id}
+                      aria-label={`Excluir sócio ${socio.nome}`}
                     />
                   </Tooltip>
                 ]}
@@ -578,21 +591,22 @@ const Socios: React.FC = () => {
             pageSizeOptions: ['12', '24', '36'],
             showTotal: (total) => `Total de ${total} sócios`,
           }}
+          locale={{ emptyText: 'Nenhum sócio encontrado' }}
           renderItem={socio => {
             return (
               <List.Item>
                 <Card
                   hoverable
                   actions={[
-                    <EditOutlined key="edit" onClick={() => handleEdit(socio)} />,
-                    <PrinterOutlined key="print" onClick={() => handlePrintSocio(socio)} />,
+                    <EditOutlined key="edit" onClick={() => handleEdit(socio)} aria-label={`Editar sócio ${socio.nome}`} />,
+                    <PrinterOutlined key="print" onClick={() => handlePrintSocio(socio)} aria-label={`Imprimir ficha do sócio ${socio.nome}`} />,
                     <DeleteOutlined 
                       key="delete" 
                       onClick={() => deletingId !== socio.id && handleDeleteSocio(socio)} 
                       style={{
                         color: deletingId === socio.id ? '#999' : '#ff4d4f',
                       }}
-                      spin={deletingId === socio.id}
+                      aria-label={`Excluir sócio ${socio.nome}`}
                     />
                   ]}
                 >
@@ -653,6 +667,7 @@ const Socios: React.FC = () => {
           </Button>,
         ]}
         width={600}
+        aria-label="Modal de gerenciamento de colunas"
       >
         <p>Selecione as colunas que deseja exibir na tabela:</p>
         <Checkbox.Group 
@@ -670,6 +685,7 @@ const Socios: React.FC = () => {
                 key={column.key as string} 
                 value={column.key}
                 style={{ marginLeft: 0 }}
+                aria-label={`Coluna ${typeof column.title === 'string' ? column.title : 'Coluna'}`}
               >
                 {typeof column.title === 'string' ? column.title : 'Coluna'}
               </Checkbox>

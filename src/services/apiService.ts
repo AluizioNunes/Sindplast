@@ -1,23 +1,11 @@
-import axios from 'axios';
+import api from '../utils/axiosConfig';
 import { toast } from 'react-toastify';
 import { Socio } from '../types/socioTypes';
 import { Empresa } from '../types/empresaTypes';
 
-const API_URL = 'http://localhost:5000/api';
-
-// Configurações do axios
-const api = axios.create({
-  baseURL: API_URL,
-  timeout: 10000, // 10 segundos
-  headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json'
-  }
-});
-
-// Interceptador para logs detalhados
+// Interceptador para logs de API
 api.interceptors.request.use(
-  config => {
+  (config: any) => {
     console.log(`[API] Requisição: ${config.method?.toUpperCase()} ${config.url}`, config);
     return config;
   },
@@ -47,6 +35,13 @@ api.interceptors.response.use(
 // Função genérica para tratamento de erros
 const handleApiError = (error: any, defaultMessage: string): string => {
   if (error.response) {
+    // Erros específicos do servidor
+    if (error.response.status === 401) {
+      return 'Sessão expirada. Faça login novamente.';
+    }
+    if (error.response.status === 403) {
+      return 'Acesso negado. Você não tem permissão para realizar esta ação.';
+    }
     return `Erro ${error.response.status}: ${error.response.data?.message || defaultMessage}`;
   } else if (error.request) {
     return 'Sem resposta do servidor. Verifique se o backend está online.';
@@ -60,7 +55,7 @@ export const apiService = {
   // Listar todos os sócios
   getAll: async (): Promise<Socio[]> => {
     try {
-      const response = await api.get('/socios');
+      const response = await api.get('/api/socios');
       return response.data as Socio[];
     } catch (error: any) {
       const errorMessage = handleApiError(error, 'Falha ao carregar a lista de sócios');
@@ -72,7 +67,7 @@ export const apiService = {
   // Obter um único sócio
   getById: async (id: number): Promise<Socio> => {
     try {
-      const response = await api.get(`/socios/${id}`);
+      const response = await api.get(`/api/socios/${id}`);
       return response.data as Socio;
     } catch (error: any) {
       const errorMessage = handleApiError(error, 'Falha ao carregar os dados do sócio');
@@ -84,6 +79,11 @@ export const apiService = {
   // Criar um novo sócio
   create: async (data: any) => {
     try {
+      // Obter usuário logado para o cadastrante
+      const userStr = localStorage.getItem('user');
+      const user = userStr ? JSON.parse(userStr) : null;
+      const cadastrante = user?.usuario || 'Sistema';
+      
       // Preparar dados com todos os campos da tabela Socios
       const socioData = {
         nome: data.nome,
@@ -104,7 +104,7 @@ export const apiService = {
         redeSocial: data.redeSocial,
         pai: data.pai,
         mae: data.mae,
-        cadastrante: data.cadastrante,
+        cadastrante: cadastrante,
         status: data.status,
         // Campos adicionais
         matricula: data.matricula,
@@ -126,7 +126,7 @@ export const apiService = {
         telefone: data.telefone
       };
 
-      const response = await api.post('/socios', socioData);
+      const response = await api.post('/api/socios', socioData);
       toast.success('Sócio cadastrado com sucesso!');
       return response.data;
     } catch (error: any) {
@@ -139,6 +139,11 @@ export const apiService = {
   // Atualizar um sócio
   update: async (id: number, data: any) => {
     try {
+      // Obter usuário logado para o cadastrante
+      const userStr = localStorage.getItem('user');
+      const user = userStr ? JSON.parse(userStr) : null;
+      const cadastrante = user?.usuario || 'Sistema';
+      
       // Preparar dados com todos os campos da tabela Socios
       const socioData = {
         nome: data.nome,
@@ -159,7 +164,7 @@ export const apiService = {
         redeSocial: data.redeSocial,
         pai: data.pai,
         mae: data.mae,
-        cadastrante: data.cadastrante,
+        cadastrante: cadastrante,
         status: data.status,
         // Campos adicionais
         matricula: data.matricula,
@@ -181,7 +186,7 @@ export const apiService = {
         telefone: data.telefone
       };
 
-      const response = await api.put(`/socios/${id}`, socioData);
+      const response = await api.put(`/api/socios/${id}`, socioData);
       toast.success('Sócio atualizado com sucesso!');
       return response.data;
     } catch (error: any) {
@@ -197,7 +202,7 @@ export const apiService = {
       console.log(`[DEBUG] Iniciando exclusão do sócio ID: ${id}`);
       
       // Verificar se o registro existe antes de tentar excluir
-      const checkExists = await api.get(`/socios/${id}`)
+      const checkExists = await api.get(`/api/socios/${id}`)
         .catch(err => {
           if (err.response?.status === 404) {
             console.log(`[DEBUG] Sócio ID: ${id} não encontrado`);
@@ -209,7 +214,7 @@ export const apiService = {
       console.log(`[DEBUG] Sócio ID: ${id} encontrado, procedendo com exclusão`);
       
       // Proceder com a exclusão
-      const response = await api.delete(`/socios/${id}`);
+      const response = await api.delete(`/api/socios/${id}`);
       
       console.log(`[DEBUG] Exclusão bem-sucedida, status: ${response.status}`);
       toast.success('Sócio excluído com sucesso!');
@@ -234,7 +239,7 @@ export const apiService = {
   // Verificar conexão com o backend
   checkConnection: async () => {
     try {
-      await api.get('/socios', { timeout: 3000 });
+      await api.get('/api/socios', { timeout: 3000 });
       return true;
     } catch (error) {
       return false;
@@ -244,7 +249,7 @@ export const apiService = {
   // Empresas
   getAllEmpresas: async (): Promise<Empresa[]> => {
     try {
-      const response = await api.get('/empresas');
+      const response = await api.get('/api/empresas');
       return response.data as Empresa[];
     } catch (error: any) {
       const errorMessage = handleApiError(error, 'Falha ao carregar a lista de empresas');
@@ -255,7 +260,7 @@ export const apiService = {
 
   getEmpresaById: async (id: number): Promise<Empresa> => {
     try {
-      const response = await api.get(`/empresas/${id}`);
+      const response = await api.get(`/api/empresas/${id}`);
       return response.data as Empresa;
     } catch (error: any) {
       const errorMessage = handleApiError(error, 'Falha ao carregar os dados da empresa');
@@ -266,8 +271,17 @@ export const apiService = {
 
   createEmpresa: async (data: Partial<Empresa>) => {
     try {
-      const payload = { ...data };
-      const response = await api.post('/empresas', payload);
+      // Obter usuário logado para o cadastrante
+      const userStr = localStorage.getItem('user');
+      const user = userStr ? JSON.parse(userStr) : null;
+      const cadastrante = user?.usuario || 'Sistema';
+      
+      const payload = { 
+        ...data,
+        cadastrante: cadastrante
+      };
+      
+      const response = await api.post('/api/empresas', payload);
       toast.success('Empresa cadastrada com sucesso!');
       return response.data;
     } catch (error: any) {
@@ -279,8 +293,17 @@ export const apiService = {
 
   updateEmpresa: async (id: number, data: Partial<Empresa>) => {
     try {
-      const payload = { ...data };
-      const response = await api.put(`/empresas/${id}`, payload);
+      // Obter usuário logado para o cadastrante
+      const userStr = localStorage.getItem('user');
+      const user = userStr ? JSON.parse(userStr) : null;
+      const cadastrante = user?.usuario || 'Sistema';
+      
+      const payload = { 
+        ...data,
+        cadastrante: cadastrante
+      };
+      
+      const response = await api.put(`/api/empresas/${id}`, payload);
       toast.success('Empresa atualizada com sucesso!');
       return response.data;
     } catch (error: any) {
@@ -292,7 +315,7 @@ export const apiService = {
 
   deleteEmpresa: async (id: number) => {
     try {
-      const response = await api.delete(`/empresas/${id}`);
+      const response = await api.delete(`/api/empresas/${id}`);
       toast.success('Empresa excluída com sucesso!');
       return response.data;
     } catch (error: any) {
@@ -301,4 +324,4 @@ export const apiService = {
       throw error;
     }
   },
-}; 
+};

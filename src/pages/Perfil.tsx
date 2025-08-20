@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Space, Modal } from 'antd';
-import { EditOutlined, DeleteOutlined, CheckCircleFilled, CloseCircleFilled } from '@ant-design/icons';
+import { Table, Button, Space, Modal, Spin } from 'antd';
+import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import PerfilModal from '../components/PerfilModal';
+import CustomLoader from '../components/CustomLoader';
+import ConfirmModal from '../components/ConfirmModal';
 
 export interface PerfilType {
   IdPerfil: number;
@@ -21,6 +23,7 @@ const Perfil: React.FC = () => {
   const [editingPerfil, setEditingPerfil] = useState<PerfilType | null>(null);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [perfilToDelete, setPerfilToDelete] = useState<PerfilType | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchPerfis = async () => {
     setLoading(true);
@@ -48,15 +51,20 @@ const Perfil: React.FC = () => {
     setModalVisible(true);
   };
 
-  const handleDelete = async (perfil: PerfilType) => {
+  const handleDelete = async () => {
+    if (!perfilToDelete) return;
+    
+    setDeleting(true);
     try {
-      await axios.delete(`http://localhost:5000/api/perfis/${perfil.IdPerfil}`);
-      toast.success(`Perfil "${perfil.Perfil}" excluído com sucesso!`);
+      await axios.delete(`http://localhost:5000/api/perfis/${perfilToDelete.IdPerfil}`);
+      toast.success(`Perfil "${perfilToDelete.Perfil}" excluído com sucesso!`);
       fetchPerfis();
       setConfirmModalVisible(false);
       setPerfilToDelete(null);
     } catch (error) {
       toast.error(`Não foi possível excluir o perfil. Verifique se não há registros vinculados.`);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -97,6 +105,7 @@ const Perfil: React.FC = () => {
             type="primary" 
             size="small" 
             onClick={() => handleEdit(record)} 
+            aria-label={`Editar perfil ${record.Perfil}`}
           />
           <Button 
             icon={<DeleteOutlined />} 
@@ -104,18 +113,37 @@ const Perfil: React.FC = () => {
             danger 
             size="small"
             onClick={() => confirmDelete(record)}
+            aria-label={`Excluir perfil ${record.Perfil}`}
           />
         </Space>
       ),
     },
   ];
 
+  // Loading state personalizado para tabela
+  const tableLoading = {
+    spinning: loading,
+    indicator: <CustomLoader message="Carregando perfis..." size="default" />
+  };
+
   return (
     <div>
       <ToastContainer position="top-right" autoClose={3000} />
       <h2>Perfis</h2>
-      <Button type="primary" onClick={handleNovo} style={{ marginBottom: 16 }}>Novo Perfil</Button>
-      <Table rowKey="IdPerfil" columns={columns} dataSource={perfis} loading={loading} />
+      <Button 
+        type="primary" 
+        onClick={handleNovo} 
+        style={{ marginBottom: 16 }}
+        aria-label="Cadastrar novo perfil"
+      >
+        Novo Perfil
+      </Button>
+      <Table 
+        rowKey="IdPerfil" 
+        columns={columns} 
+        dataSource={perfis} 
+        loading={tableLoading} 
+      />
       
       <PerfilModal
         visible={modalVisible}
@@ -124,90 +152,19 @@ const Perfil: React.FC = () => {
         initialValues={editingPerfil || undefined}
       />
 
-      <Modal
-        title={null}
-        open={confirmModalVisible}
-        onCancel={() => setConfirmModalVisible(false)}
-        footer={null}
-        closable={false}
-        centered
-        width={650}
-        style={{ borderRadius: 0, padding: 0 }}
-        bodyStyle={{ padding: 0, backgroundColor: '#f5f7e9', border: 'none' }}
-        modalRender={(node) => node}
-        wrapClassName="delete-modal-wrapper"
-      >
-        <div style={{ padding: 0 }}>
-          <div style={{ 
-            backgroundColor: '#F2311F', 
-            color: 'white', 
-            padding: '10px 20px',
-            textAlign: 'left',
-            height: '60px',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center'
-          }}>
-            <div style={{ fontSize: '22px', fontWeight: 'bold', lineHeight: '1.2' }}>SINDPLAST-AM</div>
-            <div style={{ fontSize: '11px', lineHeight: '1.2' }}>
-              SINDICATO DOS TRABALHADORES NAS INDÚSTRIAS DE MATERIAL PLÁSTICO DE MANAUS E DO ESTADO DO AMAZONAS
-            </div>
-          </div>
-          
-          <div style={{ padding: '60px 20px', textAlign: 'center' }}>
-            <h3 style={{ color: '#F2311F', fontSize: '22px', fontWeight: 'bold' }}>
-              DESEJA EXCLUIR O PERFIL "{perfilToDelete?.Perfil}"?
-            </h3>
-          </div>
-          
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'center', 
-            gap: '30px',
-            padding: '20px 40px 60px'
-          }}>
-            <Button
-              onClick={() => perfilToDelete && handleDelete(perfilToDelete)}
-              style={{ 
-                width: '180px', 
-                height: '50px',
-                fontSize: '18px',
-                fontWeight: 'bold',
-                backgroundColor: '#4caf50',
-                borderColor: '#4caf50',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <CheckCircleFilled style={{ marginRight: '8px' }} /> SIM
-            </Button>
-            
-            <Button
-              onClick={() => setConfirmModalVisible(false)}
-              style={{ 
-                width: '180px',
-                height: '50px',
-                fontSize: '18px',
-                fontWeight: 'bold',
-                backgroundColor: '#f44336',
-                borderColor: '#f44336',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <CloseCircleFilled style={{ marginRight: '8px' }} /> NAO
-            </Button>
-          </div>
-        </div>
-      </Modal>
+      <ConfirmModal
+        visible={confirmModalVisible}
+        title="Confirmar exclusão"
+        content={`Deseja excluir o perfil "${perfilToDelete?.Perfil}"?`}
+        okText="Sim, confirmar exclusão"
+        cancelText="Não"
+        onOk={handleDelete}
+        onCancel={() => {
+          setConfirmModalVisible(false);
+          setPerfilToDelete(null);
+        }}
+        loading={deleting}
+      />
     </div>
   );
 };

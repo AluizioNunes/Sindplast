@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Card, Space, Modal } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, CheckCircleFilled, CloseCircleFilled } from '@ant-design/icons';
+import { Table, Button, Card, Space, Modal, Spin } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import UsuarioModal from '../components/UsuarioModal';
+import CustomLoader from '../components/CustomLoader';
+import ConfirmModal from '../components/ConfirmModal';
 
 interface Usuario {
   IdUsuarios: number;
@@ -31,6 +33,7 @@ const Usuarios: React.FC = () => {
   const [perfis, setPerfis] = useState<PerfilType[]>([]);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [usuarioToDelete, setUsuarioToDelete] = useState<Usuario | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchUsuarios = async () => {
     try {
@@ -66,15 +69,20 @@ const Usuarios: React.FC = () => {
     setConfirmModalVisible(true);
   };
 
-  const handleDelete = async (usuario: Usuario) => {
+  const handleDelete = async () => {
+    if (!usuarioToDelete) return;
+    
+    setDeleting(true);
     try {
-      await axios.delete(`http://localhost:5000/api/usuarios/${usuario.IdUsuarios}`);
-      toast.success(`Usuário "${usuario.Nome}" excluído com sucesso!`);
+      await axios.delete(`http://localhost:5000/api/usuarios/${usuarioToDelete.IdUsuarios}`);
+      toast.success(`Usuário "${usuarioToDelete.Nome}" excluído com sucesso!`);
       fetchUsuarios();
       setConfirmModalVisible(false);
       setUsuarioToDelete(null);
     } catch (error) {
       toast.error('Erro ao excluir usuário. Verifique se não há registros vinculados.');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -105,6 +113,7 @@ const Usuarios: React.FC = () => {
               setEditingUsuario(record);
               setModalVisible(true);
             }}
+            aria-label={`Editar usuário ${record.Nome}`}
           />
           <Button 
             icon={<DeleteOutlined />} 
@@ -112,11 +121,18 @@ const Usuarios: React.FC = () => {
             danger 
             size="small"
             onClick={() => confirmDelete(record)}
+            aria-label={`Excluir usuário ${record.Nome}`}
           />
         </Space>
       ),
     },
   ];
+
+  // Loading state personalizado para tabela
+  const tableLoading = {
+    spinning: loading,
+    indicator: <CustomLoader message="Carregando usuários..." size="default" />
+  };
 
   return (
     <div style={{ padding: '24px' }}>
@@ -133,6 +149,7 @@ const Usuarios: React.FC = () => {
               setEditingUsuario(null);
               setModalVisible(true);
             }}
+            aria-label="Cadastrar novo usuário"
           >
             Novo Usuário
           </Button>
@@ -142,7 +159,7 @@ const Usuarios: React.FC = () => {
           columns={columns}
           dataSource={usuarios}
           rowKey="IdUsuarios"
-          loading={loading}
+          loading={tableLoading}
         />
       </Card>
 
@@ -178,90 +195,19 @@ const Usuarios: React.FC = () => {
         perfis={perfis}
       />
 
-      <Modal
-        title={null}
-        open={confirmModalVisible}
-        onCancel={() => setConfirmModalVisible(false)}
-        footer={null}
-        closable={false}
-        centered
-        width={650}
-        style={{ borderRadius: 0, padding: 0 }}
-        bodyStyle={{ padding: 0, backgroundColor: '#f5f7e9', border: 'none' }}
-        modalRender={(node) => node}
-        wrapClassName="delete-modal-wrapper"
-      >
-        <div style={{ padding: 0 }}>
-          <div style={{ 
-            backgroundColor: '#F2311F', 
-            color: 'white', 
-            padding: '10px 20px',
-            textAlign: 'left',
-            height: '60px',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center'
-          }}>
-            <div style={{ fontSize: '22px', fontWeight: 'bold', lineHeight: '1.2' }}>SINDPLAST-AM</div>
-            <div style={{ fontSize: '11px', lineHeight: '1.2' }}>
-              SINDICATO DOS TRABALHADORES NAS INDÚSTRIAS DE MATERIAL PLÁSTICO DE MANAUS E DO ESTADO DO AMAZONAS
-            </div>
-          </div>
-          
-          <div style={{ padding: '60px 20px', textAlign: 'center' }}>
-            <h3 style={{ color: '#F2311F', fontSize: '22px', fontWeight: 'bold' }}>
-              DESEJA EXCLUIR O USUÁRIO "{usuarioToDelete?.Nome}"?
-            </h3>
-          </div>
-          
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'center', 
-            gap: '30px',
-            padding: '20px 40px 60px'
-          }}>
-            <Button
-              onClick={() => handleDelete(usuarioToDelete!)}
-              style={{ 
-                width: '180px', 
-                height: '50px',
-                fontSize: '18px',
-                fontWeight: 'bold',
-                backgroundColor: '#4caf50',
-                borderColor: '#4caf50',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <CheckCircleFilled style={{ marginRight: '8px' }} /> SIM
-            </Button>
-            
-            <Button
-              onClick={() => setConfirmModalVisible(false)}
-              style={{ 
-                width: '180px',
-                height: '50px',
-                fontSize: '18px',
-                fontWeight: 'bold',
-                backgroundColor: '#f44336',
-                borderColor: '#f44336',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <CloseCircleFilled style={{ marginRight: '8px' }} /> NAO
-            </Button>
-          </div>
-        </div>
-      </Modal>
+      <ConfirmModal
+        visible={confirmModalVisible}
+        title="Confirmar exclusão"
+        content={`Deseja excluir o usuário "${usuarioToDelete?.Nome}"?`}
+        okText="Sim, confirmar exclusão"
+        cancelText="Não"
+        onOk={handleDelete}
+        onCancel={() => {
+          setConfirmModalVisible(false);
+          setUsuarioToDelete(null);
+        }}
+        loading={deleting}
+      />
     </div>
   );
 };

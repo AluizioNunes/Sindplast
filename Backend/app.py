@@ -1,8 +1,10 @@
-from flask import Flask, jsonify, request, render_template_string
+from flask import Flask, jsonify, request, render_template_string, session
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
+from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity, create_access_token, create_refresh_token
+from flask_session import Session
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 import re
 from sqlalchemy.exc import IntegrityError
@@ -15,8 +17,27 @@ CORS(app)  # Habilitar CORS para integração com o frontend React
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://Sindplast:Sindplast@172.26.97.64:5432/Sindplast'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# Configuração JWT
+app.config['JWT_SECRET_KEY'] = 'sindplast-jwt-secret-key-change-in-production'  # Em produção, usar variável de ambiente
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = 28800  # 8 horas
+app.config['JWT_REFRESH_TOKEN_EXPIRES'] = 2592000  # 30 dias
+
+# Configuração de Sessão
+app.config['SECRET_KEY'] = 'sindplast-session-secret-key-change-in-production'
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
+app.config['SESSION_COOKIE_SECURE'] = False  # True em produção com HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
 # Inicializar o SQLAlchemy
 db = SQLAlchemy(app)
+
+# Inicializar JWT
+jwt = JWTManager(app)
+
+# Inicializar Sessão
+Session(app)
 
 # Modelos
 class Empresa(db.Model):
@@ -659,13 +680,87 @@ def delete_usuario(id):
         db.session.rollback()
         return jsonify({'message': f'Erro ao excluir usuário: {str(e)}'}), 500
 
-@app.route('/api/login', methods=['POST'])
+@app.route('/api/auth/login', methods=['POST'])
 def login():
     data = request.json
-    usuario = Usuario.query.filter_by(Usuario=data['Usuario']).first()
-    if usuario and check_password_hash(usuario.Senha, data['Senha']):
-        return jsonify({'success': True, 'usuario': usuario.to_dict()})
+    usuario = Usuario.query.filter_by(Usuario=data['usuario']).first()
+    
+    if usuario and check_password_hash(usuario.Senha, data['senha']):
+        # Gerar JWT tokens
+        access_token = create_access_token(identity=usuario.IdUsuarios)
+        refresh_token = create_refresh_token(identity=usuario.IdUsuarios)
+        
+        # Criar sessão persistente
+        session['user_id'] = usuario.IdUsuarios
+        session['usuario'] = usuario.Usuario
+        session['perfil'] = usuario.Perfil
+        session['funcao'] = usuario.Funcao
+        
+        return jsonify({
+            'success': True,
+            'access_token': access_token,
+            'refresh_token': refresh_token,
+            'usuario': {
+                'id': usuario.IdUsuarios,
+                'nome': usuario.Nome,
+                'usuario': usuario.Usuario,
+                'perfil': usuario.Perfil,
+                'funcao': usuario.Funcao,
+                'email': usuario.Email
+            }
+        })
+    
     return jsonify({'success': False, 'message': 'Usuário ou senha inválidos'}), 401
+
+@app.route('/api/auth/refresh', methods=['POST'])
+@jwt_required(refresh=True)
+def refresh():
+    try:
+        # Obter ID do usuário do refresh token
+        user_id = get_jwt_identity()
+        
+        # Gerar novo access token
+        new_access_token = create_access_token(identity=user_id)
+        
+        return jsonify({
+            'success': True,
+            'access_token': new_access_token
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Erro ao renovar token: {str(e)}'}), 500
+
+@app.route('/api/auth/logout', methods=['POST'])
+def logout():
+    try:
+        # Limpar sessão
+        session.clear()
+        
+        return jsonify({'success': True, 'message': 'Logout realizado com sucesso'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Erro ao fazer logout: {str(e)}'}), 500
+
+@app.route('/api/auth/me', methods=['GET'])
+def get_current_user():
+    try:
+        # Verificar se há sessão ativa
+        if 'user_id' in session:
+            usuario = Usuario.query.get(session['user_id'])
+            if usuario:
+                return jsonify({
+                    'success': True,
+                    'usuario': {
+                        'id': usuario.IdUsuarios,
+                        'nome': usuario.Nome,
+                        'usuario': usuario.Usuario,
+                        'perfil': usuario.Perfil,
+                        'funcao': usuario.Funcao,
+                        'email': usuario.Email
+                    }
+                })
+        
+        return jsonify({'success': False, 'message': 'Usuário não autenticado'}), 401
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Erro ao obter usuário: {str(e)}'}), 500
 
 # Função para criar usuário Admin padrão
 with app.app_context():
